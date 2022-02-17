@@ -1,8 +1,20 @@
 import React from 'react';
-import Reader, { Boundary } from './Reader';
+import useReader, { Boundary } from './useReader';
 
 const App: React.VFC = () => {
   const [text, setText] = React.useState('Test example');
+  const { read, isReading, boundary } = useReader({
+    lang: 'en-US',
+    prioritizeVoices: (vA, vB) => {
+      if (vA.name.indexOf('Google') >= 0) {
+        return -1;
+      } else if (vB.name.indexOf('Google') >= 0) {
+        return 1;
+      } else {
+        return 0;
+      }
+    },
+  });
 
   function updateText(e: React.ChangeEvent<HTMLTextAreaElement>) {
     setText(e.target.value);
@@ -32,29 +44,12 @@ const App: React.VFC = () => {
 
   return (
     <main>
-      <Reader
-        lang="en-US"
-        prioritizeVoices={(vA, vB) => {
-          if (vA.name.indexOf('Google') >= 0) {
-            return -1;
-          } else if (vB.name.indexOf('Google') >= 0) {
-            return 1;
-          } else {
-            return 0;
-          }
-        }}
-      >
-        {(read, isReading, boundary) => (
-          <div>
-            <textarea onInput={updateText} value={text} disabled={isReading} />
+      <textarea onInput={updateText} value={text} disabled={isReading} />
 
-            <p>{highlightSpoken(text, boundary)}</p>
-            <button onClick={() => read(text)} disabled={isReading}>
-              {isReading ? 'Pause' : 'Read to me'}
-            </button>
-          </div>
-        )}
-      </Reader>
+      <p>{highlightSpoken(text, boundary)}</p>
+      <button onClick={() => read(text)} disabled={isReading}>
+        {isReading ? 'Pause' : 'Read to me'}
+      </button>
     </main>
   );
 };
