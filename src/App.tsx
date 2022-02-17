@@ -1,26 +1,62 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import Reader, { Boundary } from './Reader';
 
-function App() {
+const App: React.VFC = () => {
+  const [text, setText] = React.useState('Test example');
+
+  function updateText(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    setText(e.target.value);
+  }
+
+  function highlightSpoken(
+    text: string,
+    boundary?: Boundary
+  ): React.ReactNode[] {
+    if (!boundary) {
+      return [<span key="inactive">{text}</span>];
+    }
+
+    const { start: s, length: l } = boundary;
+    return [
+      <span key="before" className="inactive">
+        {text.slice(0, s)}
+      </span>,
+      <span key="active" className="active">
+        {text.slice(s, s + l)}
+      </span>,
+      <span key="after" className="inactive">
+        {text.slice(s + l)}
+      </span>,
+    ];
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <main>
+      <Reader
+        lang="en-US"
+        prioritizeVoices={(vA, vB) => {
+          if (vA.name.indexOf('Google') >= 0) {
+            return -1;
+          } else if (vB.name.indexOf('Google') >= 0) {
+            return 1;
+          } else {
+            return 0;
+          }
+        }}
+      >
+        {(read, isReading, boundary) => (
+          <div>
+            <textarea onInput={updateText} value={text} disabled={isReading} />
+
+            <p>{highlightSpoken(text, boundary)}</p>
+            <button onClick={() => read(text)} disabled={isReading}>
+              {isReading ? 'Pause' : 'Read to me'}
+            </button>
+          </div>
+        )}
+      </Reader>
+    </main>
   );
-}
+};
 
 export default App;
